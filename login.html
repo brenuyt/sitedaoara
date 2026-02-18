@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login • BJ MESSAGES</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="favicon.png">
+
+  <style>
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-family: system-ui, Arial, sans-serif;
+      background:
+        radial-gradient(600px 400px at 20% 20%, rgba(255,0,0,.12), transparent 60%),
+        linear-gradient(135deg,#050505,#121212);
+      color:#fff;
+    }
+    .box{
+      width:320px;
+      padding:30px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow:0 20px 50px rgba(0,0,0,.6);
+      text-align:center;
+    }
+    h2{margin-bottom:20px;color:#ff1b2d;}
+    input{
+      width:90%;
+      padding:12px;
+      margin:8px 0;
+      border-radius:10px;
+      border:none;
+      outline:none;
+      background:#0e0e0e;
+      color:#fff;
+    }
+    button{
+      width:100%;
+      margin-top:14px;
+      padding:12px;
+      border:none;
+      border-radius:12px;
+      background:#ff1b2d;
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+    button:hover{background:#c40000;}
+    a{color:#ff4d4d;text-decoration:none;font-weight:700;}
+    .hint{font-size:12px;color:#aaa;margin-top:10px;}
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="senha" placeholder="Senha">
+  <button id="btnLogin">Entrar</button>
+  <p><a href="cadastro.html">Criar conta</a></p>
+  <div class="hint" id="status"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabase = supabase.createClient(
+  "https://pykinyimawvayekxxgao.supabase.co",
+  "sb_publishable_2jVaqcTuER-Nmi2HLkEy_w_g0Cyxt5J"
+);
+
+btnLogin.onclick = async () => {
+  const email = email.value;
+  const password = senha.value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error) return alert(error.message);
+  location.href="index.html";
+};
+</script>
+
+</body>
+</html>

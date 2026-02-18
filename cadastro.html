@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Cadastro • BJ</title>
+<link rel="icon" href="favicon.png">
+<style>
+/* mesmo CSS do login */
+body{margin:0;height:100vh;display:flex;justify-content:center;align-items:center;
+background:linear-gradient(135deg,#050505,#121212);color:#fff;font-family:system-ui;}
+.box{width:320px;padding:30px;background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.12);border-radius:18px;text-align:center;}
+h2{color:#ff1b2d;}
+input{width:90%;padding:12px;margin:8px 0;border-radius:10px;border:none;background:#0e0e0e;color:#fff;}
+button{width:100%;margin-top:14px;padding:12px;border:none;border-radius:12px;background:#ff1b2d;color:#fff;font-weight:800;}
+button:hover{background:#c40000;}
+a{color:#ff4d4d;text-decoration:none;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Criar conta</h2>
+  <input id="username" placeholder="Username">
+  <input id="email" type="email" placeholder="Email">
+  <input id="senha" type="password" placeholder="Senha">
+  <button id="btnCadastro">Cadastrar</button>
+  <p><a href="login.html">Já tenho conta</a></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabase = supabase.createClient(
+ "https://pykinyimawvayekxxgao.supabase.co",
+ "sb_publishable_2jVaqcTuER-Nmi2HLkEy_w_g0Cyxt5J"
+);
+
+btnCadastro.onclick = async ()=>{
+ const {data,error}=await supabase.auth.signUp({
+   email:email.value,password:senha.value
+ });
+ if(error) return alert(error.message);
+ location.href="index.html";
+};
+</script>
+
+</body>
+</html>

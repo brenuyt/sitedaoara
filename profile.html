@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="UTF-8">
+  <title>Meu Perfil</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(600px 400px at 20% 20%, rgba(255,0,0,.14), transparent 60%),
+        radial-gradient(600px 400px at 80% 80%, rgba(255,0,0,.08), transparent 60%),
+        linear-gradient(135deg, #050505, #121212);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    .box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 34px 30px;
+      border-radius: 20px;
+      width: 340px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #ff1b2d;
+      letter-spacing: 1px;
+    }
+
+    img {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ff1b2d;
+      margin-bottom: 20px;
+      box-shadow: 0 0 22px rgba(255,27,45,.35);
+      background: #0e0e0e;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      background: #0e0e0e;
+      color: white;
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin-top: 12px;
+      color: #ccc;
+      font-size: 13px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background: #ff1b2d;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      transition: 0.3s;
+      box-shadow: 0 0 18px rgba(255,27,45,.35);
+    }
+
+    button:hover {
+      background: #c40000;
+      box-shadow: 0 0 26px rgba(255,27,45,.45);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Meu Perfil</h2>
+
+  <img id="avatarPreview" src="https://via.placeholder.com/120" alt="Avatar">
+
+  <input type="text" id="username" placeholder="Seu nome">
+  <input type="file" id="avatarFile" accept="image/*">
+
+  <button id="btnSalvar">Salvar</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = "https://pykinyimawvayekxxgao.supabase.co";
+  const supabaseKey = "sb_publishable_2jVaqcTuER-Nmi2HLkEy_w_g0Cyxt5J";
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  const BUCKET_NAME = "Avatars";
+  const FOLDER = "h0za56_0";
+
+  const avatarPreview = document.getElementById("avatarPreview");
+  const usernameInput = document.getElementById("username");
+  const avatarFileInput = document.getElementById("avatarFile");
+  const btnSalvar = document.getElementById("btnSalvar");
+
+  let currentAvatarUrl = null;
+
+  (async () => {
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
+    if (error || !user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("username, avatar_url")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.username) usernameInput.value = profile.username;
+    if (profile?.avatar_url) {
+      currentAvatarUrl = profile.avatar_url;
+      avatarPreview.src = profile.avatar_url;
+    }
+  })();
+
+  avatarFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) avatarPreview.src = URL.createObjectURL(file);
+  });
+
+  btnSalvar.addEventListener("click", salvarPerfil);
+
+  async function salvarPerfil() {
+    btnSalvar.disabled = true;
+
+    const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();
+    if (userErr || !user) {
+      btnSalvar.disabled = false;
+      window.location.href = "login.html";
+      return;
+    }
+
+    const username = usernameInput.value.trim();
+    const file = avatarFileInput.files[0];
+
+    let avatarUrl = currentAvatarUrl;
+
+    if (file) {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const filePath = `${FOLDER}/${user.id}.${ext}`;
+
+      const { error: uploadError } = await supabaseClient.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) {
+        alert("Erro no upload: " + uploadError.message);
+        btnSalvar.disabled = false;
+        return;
+      }
+
+      const { data: pub } = supabaseClient.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(filePath);
+
+      avatarUrl = (pub?.publicUrl || null) + `?t=${Date.now()}`;
+    }
+
+    const { error: upsertError } = await supabaseClient
+      .from("profiles")
+      .upsert({ id: user.id, username: username || null, avatar_url: avatarUrl || null });
+
+    if (upsertError) {
+      alert("Erro ao salvar no profiles: " + upsertError.message);
+      btnSalvar.disabled = false;
+      return;
+    }
+
+    alert("Perfil salvo!");
+    window.location.href = "index.html";
+  }
+</script>
+
+</body>
+</html>
