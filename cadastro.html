@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="UTF-8" />
+  <title>Cadastro</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(600px 400px at 20% 20%, rgba(255,0,0,.14), transparent 60%),
+        radial-gradient(600px 400px at 80% 80%, rgba(255,0,0,.08), transparent 60%),
+        linear-gradient(135deg, #050505, #121212);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    .caixa {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 34px 30px;
+      border-radius: 20px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    }
+
+    h2 {
+      color: #ff1b2d;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      background: #0e0e0e;
+      color: white;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      background: #ff1b2d;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      transition: 0.3s;
+      box-shadow: 0 0 18px rgba(255,27,45,.35);
+    }
+
+    button:hover {
+      background-color: #c40000;
+      box-shadow: 0 0 26px rgba(255,27,45,.45);
+      transform: translateY(-1px);
+    }
+
+    p {
+      margin-top: 18px;
+      color: #ccc;
+      font-size: 14px;
+    }
+
+    a {
+      color: #ff4d4d;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .hint {
+      color: #aaa;
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="caixa">
+    <h2>Cadastro</h2>
+
+    <!-- username é só pra sua tabela profiles -->
+    <input type="text" id="username" placeholder="Nome de usuário (opcional)" />
+
+    <!-- Supabase Auth usa EMAIL + SENHA -->
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="senha" placeholder="Senha" />
+
+    <button id="btnCadastro">Cadastrar</button>
+
+    <p><a href="login.html">Já tem conta? Login</a></p>
+    <div class="hint" id="status"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = "https://pykinyimawvayekxxgao.supabase.co";
+    const supabaseKey = "sb_publishable_2jVaqcTuER-Nmi2HLkEy_w_g0Cyxt5J";
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const statusEl = document.getElementById("status");
+    const btnCadastro = document.getElementById("btnCadastro");
+
+    function setStatus(msg) {
+      statusEl.textContent = msg || "";
+    }
+
+    async function cadastrar() {
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
+
+      if (!email || !senha) {
+        alert("Preencha email e senha!");
+        return;
+      }
+
+      btnCadastro.disabled = true;
+      setStatus("Criando conta...");
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password: senha
+      });
+
+      btnCadastro.disabled = false;
+
+      if (error) {
+        alert("Erro no cadastro: " + error.message);
+        setStatus("");
+        return;
+      }
+
+      setStatus("Conta criada!");
+
+      if (data?.user) {
+        await supabaseClient.from("profiles").upsert({
+          id: data.user.id,
+          username: username || null,
+          avatar_url: null
+        });
+
+        window.location.href = "index.html";
+        return;
+      }
+
+      alert("Cadastro feito! Confira seu email para confirmar e depois faça login.");
+      window.location.href = "login.html";
+    }
+
+    btnCadastro.addEventListener("click", cadastrar);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") cadastrar();
+    });
+  </script>
+</body>
+</html>
